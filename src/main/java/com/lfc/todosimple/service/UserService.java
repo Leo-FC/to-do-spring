@@ -1,7 +1,6 @@
 package com.lfc.todosimple.service;
 
 import com.lfc.todosimple.model.User;
-import com.lfc.todosimple.repository.TaskRepository;
 import com.lfc.todosimple.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,8 +14,6 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private TaskRepository taskRepository;
 
 
     public User findById(Long id){
@@ -30,8 +27,6 @@ public class UserService {
         obj.setId(null);
 
         obj = this.userRepository.save(obj);
-
-        this.taskRepository.saveAll(obj.getTasks());
 
         return obj;
     }
