@@ -2,6 +2,8 @@ package com.lfc.todosimple.service;
 
 import com.lfc.todosimple.model.User;
 import com.lfc.todosimple.repository.UserRepository;
+import com.lfc.todosimple.service.exceptions.DataBindingViolationException;
+import com.lfc.todosimple.service.exceptions.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,12 +16,10 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-
-
     public User findById(Long id){
         Optional<User> user = userRepository.findById(id);
 
-        return user.orElseThrow(() -> new RuntimeException("Usuario nao encontrado"));
+        return user.orElseThrow(() -> new ObjectNotFoundException("Usuario nao encontrado"));
     }
 
     @Transactional
@@ -40,14 +40,13 @@ public class UserService {
         return this.userRepository.save(newObj);
     }
 
-    @Transactional
     public void delete(Long id){
         findById(id);
 
         try {
             this.userRepository.deleteById(id);
         } catch (Exception e) {
-            throw new RuntimeException("Nao e possivel excluir pois ha entidades relacionadas");
+            throw new DataBindingViolationException("Nao e possivel excluir pois ha entidades relacionadas");
         }
     }
 
