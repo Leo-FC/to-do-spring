@@ -35,7 +35,7 @@ public class SecurityConfig {
         http.cors().and().csrf().disable();
 
         http.authorizeRequests()
-                .antMatchers(HttpMethod.POST, PUBLIC_MATCHERS).permitAll()
+                .antMatchers(HttpMethod.POST, PUBLIC_MATCHERS_POST).permitAll()
                 .antMatchers(PUBLIC_MATCHERS).permitAll()
                 .anyRequest().authenticated();
 
