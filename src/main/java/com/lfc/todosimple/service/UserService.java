@@ -3,14 +3,18 @@ package com.lfc.todosimple.service;
 import com.lfc.todosimple.model.User;
 import com.lfc.todosimple.model.enums.ProfileEnum;
 import com.lfc.todosimple.repository.UserRepository;
+import com.lfc.todosimple.security.UserSpringSecurity;
+import com.lfc.todosimple.service.exceptions.AuthorizationException;
 import com.lfc.todosimple.service.exceptions.DataBindingViolationException;
 import com.lfc.todosimple.service.exceptions.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,6 +29,11 @@ public class UserService {
     private UserRepository userRepository;
 
     public User findById(Long id){
+        UserSpringSecurity userSpringSecurity = authenticated();
+        if(!Objects.nonNull(userSpringSecurity) || !userSpringSecurity.hasRole(ProfileEnum.ADMIN) && !id.equals(userSpringSecurity.getId())){
+            throw new AuthorizationException("Acesso negado");
+        }
+
         Optional<User> user = userRepository.findById(id);
 
         return user.orElseThrow(() -> new ObjectNotFoundException("Usuario nao encontrado"));
@@ -63,6 +72,14 @@ public class UserService {
             this.userRepository.deleteById(id);
         } catch (Exception e) {
             throw new DataBindingViolationException("Nao e possivel excluir pois ha entidades relacionadas");
+        }
+    }
+
+    public static UserSpringSecurity authenticated(){
+        try {
+            return (UserSpringSecurity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        }catch (Exception e){
+            return null;
         }
     }
 
