@@ -113,6 +113,10 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
+        <finalName>todosimple</finalName>
     </build>
+
+    <packaging>jar</packaging>
+
 
 </project>
