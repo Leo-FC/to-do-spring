@@ -19,9 +19,11 @@ loginForm.addEventListener('submit', async (e) => {
 
         if (response.ok) {
             const token = response.headers.get("Authorization");
+            const data = await response.json();
 
-            if (token) {
+            if (token && data) {
                 localStorage.setItem("token", token);
+                localStorage.setItem("userRoles", data.roles);
                 window.location.href = "index.html";
             } else {
                 showError("Erro: O servidor não retornou o token.");
