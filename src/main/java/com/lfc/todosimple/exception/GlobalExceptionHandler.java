@@ -76,6 +76,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
             DataIntegrityViolationException dataIntegrityViolationException,
             WebRequest request){
         String errorMessage = dataIntegrityViolationException.getMostSpecificCause().getMessage();
+
+        if(errorMessage != null && errorMessage.contains("Duplicate entry")){
+            errorMessage = "Este nome de usuário já está em uso.";
+        }
         log.error("Failed to save entity with integrity problems: " + errorMessage, dataIntegrityViolationException);
         return buildErrorResponse(
                 dataIntegrityViolationException,
@@ -90,9 +94,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
             ConstraintViolationException constraintViolationException,
             WebRequest request){
 
+        StringBuilder errorMessage = new StringBuilder("Nome de usuário deve ter no mínimo 3 caracteres.");
+
         log.error("Failed to validate element", constraintViolationException);
         return buildErrorResponse(
                 constraintViolationException,
+                errorMessage.toString(),
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 request);
     }
