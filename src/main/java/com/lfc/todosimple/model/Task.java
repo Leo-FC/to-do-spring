@@ -16,6 +16,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Table(name = Task.TABLE_NAME)
@@ -46,4 +48,14 @@ public class Task {
     @Column
     (name = "status", nullable = false)
     private TaskStatusEnum status = TaskStatusEnum.NAO_COMECOU;
+
+
+    @Column
+    (name = "created_date", nullable = false)
+    private LocalDate createdDate;
+
+    @Column
+    (name = "deadline")
+    private LocalDate deadline;
+
 }

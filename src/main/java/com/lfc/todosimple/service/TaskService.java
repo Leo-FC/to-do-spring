@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -71,6 +72,14 @@ public class TaskService {
             throw new AuthorizationException("Acesso negado");
         }
 
+        if(obj.getCreatedDate() == null){
+            obj.setCreatedDate(LocalDate.now());
+        }
+
+        if(obj.getDeadline() != null && obj.getDeadline().isBefore(obj.getCreatedDate())){
+            throw new DataBindingViolationException("A data de entrega não pode ser anterior a data de criação.");
+        }
+
         User user = this.userService.findById(userSpringSecurity.getId());
         obj.setId(null);
         obj.setUser(user);
@@ -85,6 +94,17 @@ public class TaskService {
         newObj.setDescription(obj.getDescription());
         newObj.setPriority(obj.getPriority());
         newObj.setStatus(obj.getStatus());
+
+        if(obj.getCreatedDate() != null) {
+            newObj.setCreatedDate(obj.getCreatedDate());
+        }
+
+        newObj.setDeadline(obj.getDeadline());
+
+        if (newObj.getDeadline() != null && newObj.getDeadline().isBefore(newObj.getCreatedDate())) {
+            throw new DataBindingViolationException("A data de entrega não pode ser anterior à data de criação.");
+        }
+
         return this.taskRepository.save(newObj);
     }
 
