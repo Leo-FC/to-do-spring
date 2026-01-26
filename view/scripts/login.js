@@ -24,6 +24,7 @@ loginForm.addEventListener('submit', async (e) => {
             if (token && data) {
                 localStorage.setItem("token", token);
                 localStorage.setItem("userRoles", data.roles);
+                localStorage.setItem("username", data.username);
                 window.location.href = "index.html";
             } else {
                 showError("Erro: O servidor não retornou o token.");

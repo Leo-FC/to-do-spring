@@ -1,6 +1,7 @@
 const API_URL = "http://localhost:8080";
 
 let currentTasks = [];
+let currentViewMode = 'list'; // 'list' ou 'kanban'
 
 let taskIdToDelete = null;
 let taskIdToEdit = null;
@@ -21,9 +22,36 @@ document.addEventListener("DOMContentLoaded", () => {
             getTasks('mine');
         } else {
             getTasks('mine');
+            displayUserInfo();
         }
     }
 });
+
+function switchView(mode) {
+    currentViewMode = mode;
+    const listContainer = document.getElementById("listViewContainer");
+    const kanbanContainer = document.getElementById("kanbanViewContainer");
+    const btnList = document.getElementById("viewListBtn");
+    const btnKanban = document.getElementById("viewKanbanBtn");
+
+    if (mode === 'list') {
+        listContainer.classList.remove("d-none");
+        kanbanContainer.classList.add("d-none");
+
+        btnList.classList.add("active");
+        btnKanban.classList.remove("active");
+
+        renderTasks(currentTasks);
+    } else {
+        listContainer.classList.add("d-none");
+        kanbanContainer.classList.remove("d-none");
+
+        btnList.classList.remove("active");
+        btnKanban.classList.add("active");
+
+        renderKanban(currentTasks);
+    }
+}
 
 function getPriorityBadge(code) {
     switch(code) {
@@ -140,7 +168,9 @@ async function getTasks(mode = 'mine', filterUsername = null) {
     const loadingElement = document.getElementById("loading");
 
     if(loadingElement) loadingElement.classList.remove("d-none");
-    document.getElementById("tasksTable").classList.add("d-none");
+
+    document.getElementById("listViewContainer").classList.add("d-none");
+    document.getElementById("kanbanViewContainer").classList.add("d-none");
     document.getElementById("noTasksMessage").classList.add("d-none");
 
     let endpoint = "/task/user";
@@ -171,7 +201,13 @@ async function getTasks(mode = 'mine', filterUsername = null) {
             currentTasks = tasks.filter(t => t.user && t.user.username === filterUsername);
         }
 
-        renderTasks(currentTasks);
+        if (currentViewMode === 'list') {
+            document.getElementById("listViewContainer").classList.remove("d-none");
+            renderTasks(currentTasks);
+        } else {
+            document.getElementById("kanbanViewContainer").classList.remove("d-none");
+            renderKanban(currentTasks);
+        }
 
     } catch (error) {
         console.error(error);
@@ -204,10 +240,12 @@ function renderTasks(tasks) {
     }
 
     if (!tasks || tasks.length === 0) {
+        document.getElementById("listViewContainer").classList.add("d-none");
         noTasks.classList.remove("d-none");
         return;
     }
 
+    document.getElementById("listViewContainer").classList.remove("d-none");
     table.classList.remove("d-none");
 
     tasks.forEach((task, index) => {
@@ -221,7 +259,7 @@ function renderTasks(tasks) {
         const row = `
             <tr class="align-middle">
                 <td>${index + 1}</td>
-                <td class="fw-bold">${task.description}</td>
+                <td class="fw-bold desc-cell">${task.description}</td>
                 
                 ${userColumnHtml}
                 
@@ -243,6 +281,110 @@ function renderTasks(tasks) {
             </tr>
         `;
         tbody.innerHTML += row;
+    });
+}
+
+function renderKanban(tasks) {
+    const noTasks = document.getElementById("noTasksMessage");
+
+    for (let i = 1; i <= 4; i++) {
+        const col = document.getElementById(`col-priority-${i}`);
+        if(col) col.innerHTML = "";
+    }
+
+    if (!tasks || tasks.length === 0) {
+        document.getElementById("kanbanViewContainer").classList.add("d-none");
+        noTasks.classList.remove("d-none");
+        return;
+    }
+
+    noTasks.classList.add("d-none");
+    document.getElementById("kanbanViewContainer").classList.remove("d-none");
+
+    tasks.forEach(task => {
+        let statusText = "Indefinido";
+        let statusClass = "status-bar-1";
+
+        let arrowsHtml = "";
+
+        if (task.status === 1) {
+            statusText = "Não começou";
+            statusClass = "status-bar-1";
+            arrowsHtml = `
+                <button type="button" class="status-btn" onclick="changeStatus(event, ${task.id}, 2)" title="Iniciar">
+                    <i class="bi bi-caret-up-fill"></i>
+                </button>
+            `;
+        }
+        else if (task.status === 2) {
+            statusText = "Em andamento";
+            statusClass = "status-bar-2";
+            arrowsHtml = `
+                <button type="button" class="status-btn" onclick="changeStatus(event, ${task.id}, 1)" title="Voltar">
+                    <i class="bi bi-caret-down-fill"></i>
+                </button>
+                <span class="mx-2">${statusText}</span>
+                <button type="button" class="status-btn" onclick="changeStatus(event, ${task.id}, 3)" title="Concluir">
+                    <i class="bi bi-caret-up-fill"></i>
+                </button>
+            `;
+        }
+        else if (task.status === 3) {
+            statusText = "Concluído";
+            statusClass = "status-bar-3";
+            arrowsHtml = `
+                <button type="button" class="status-btn" onclick="changeStatus(event, ${task.id}, 2)" title="Retomar">
+                    <i class="bi bi-caret-down-fill"></i>
+                </button>
+            `;
+        }
+
+        if (task.status !== 2) {
+            if (task.status === 1) {
+                arrowsHtml = `<span>${statusText}</span> ${arrowsHtml}`;
+            } else {
+                arrowsHtml = `${arrowsHtml} <span>${statusText}</span>`;
+            }
+        }
+
+        const deadline = formatDate(task.deadline);
+        const userName = (isAdmin() && task.user) ? `<div class="small text-center mb-2" style="opacity: 0.8">${task.user.username}</div>` : '';
+        const priorityClass = `prio-${task.priority}`;
+
+        const cardHtml = `
+            <div class="task-card ${priorityClass}" draggable="true" ondragstart="drag(event, ${task.id})">
+                <div class="card-actions">
+                    <button class="card-btn" onclick="openEditModal(${task.id})">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="card-btn" onclick="openDeleteModal(${task.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+
+                <div class="card-title" style="margin-top: 35px;">
+                    ${task.description}
+                </div>
+                
+                ${userName}
+
+                <div class="card-dates">
+                    <i class="bi bi-calendar3 me-1"></i> ${deadline}
+                </div>
+
+                <div class="card-status-bar ${statusClass}">
+                    <div class="status-controls">
+                        ${arrowsHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const colId = `col-priority-${task.priority}`;
+        const colElement = document.getElementById(colId);
+        if (colElement) {
+            colElement.innerHTML += cardHtml;
+        }
     });
 }
 
@@ -373,7 +515,13 @@ async function confirmUpdateTask() {
 
         if (response.ok) {
             editModalBS.hide();
-            refreshCurrentView();
+            if(isAdmin() && document.getElementById("btnAllTasks").classList.contains("active")) {
+                getTasks('all');
+            } else if (isAdmin() && document.getElementById("userFilterSelect").value !== "") {
+                getTasks('filter', document.getElementById("userFilterSelect").value);
+            } else {
+                getTasks('mine');
+            }
         } else {
             alert("Erro ao atualizar tarefa.");
         }
@@ -402,7 +550,13 @@ async function confirmDeleteTask() {
 
         if (response.ok) {
             deleteModalBS.hide();
-            refreshCurrentView();
+            if(isAdmin() && document.getElementById("btnAllTasks").classList.contains("active")) {
+                getTasks('all');
+            } else if (isAdmin() && document.getElementById("userFilterSelect").value !== "") {
+                getTasks('filter', document.getElementById("userFilterSelect").value);
+            } else {
+                getTasks('mine');
+            }
         } else {
             alert("Erro ao deletar tarefa.");
         }
@@ -430,5 +584,114 @@ function refreshCurrentView() {
         getTasks('filter', document.getElementById("userFilterSelect").value);
     } else {
         getTasks('mine');
+    }
+}
+
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+
+function drag(ev, taskId) {
+    ev.dataTransfer.setData("text/plain", taskId);
+    ev.target.style.opacity = "0.4";
+}
+
+async function drop(ev, newPriority) {
+    ev.preventDefault();
+
+    const taskId = ev.dataTransfer.getData("text/plain");
+
+    const task = currentTasks.find(t => t.id == taskId);
+
+    if (task && task.priority === newPriority) return;
+
+    try {
+        const response = await fetch(`${API_URL}/task/${taskId}`, {
+            method: "PUT",
+            headers: {
+                "Authorization": localStorage.getItem("token"),
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                description: task.description,
+                priority: parseInt(newPriority),
+                status: task.status,
+                createdDate: task.createdDate,
+                deadline: task.deadline
+            })
+        });
+
+        if (response.ok) {
+            if(isAdmin() && document.getElementById("btnAllTasks").classList.contains("active")) {
+                getTasks('all');
+            } else {
+                getTasks('mine');
+            }
+        } else {
+            alert("Erro ao mover tarefa.");
+        }
+    } catch (error) {
+        console.error("Erro ao mover card:", error);
+    }
+}
+
+document.addEventListener("dragend", function(event) {
+    event.target.style.opacity = "1";
+});
+
+async function changeStatus(event, taskId, newStatus) {
+    if(event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    const taskIndex = currentTasks.findIndex(t => t.id === taskId);
+    if (taskIndex === -1) return;
+
+    const task = currentTasks[taskIndex];
+
+    try {
+        const response = await fetch(`${API_URL}/task/${taskId}`, {
+            method: "PUT",
+            headers: {
+                "Authorization": localStorage.getItem("token"),
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                description: task.description,
+                priority: task.priority,
+                status: parseInt(newStatus),
+                createdDate: task.createdDate,
+                deadline: task.deadline
+            })
+        });
+
+        if (response.ok) {
+            currentTasks[taskIndex].status = parseInt(newStatus);
+
+            if (currentViewMode === 'kanban') {
+                renderKanban(currentTasks);
+            } else {
+                renderTasks(currentTasks);
+            }
+        } else {
+            alert("Erro ao atualizar status.");
+        }
+    } catch (error) {
+        console.error("Erro:", error);
+    }
+}
+
+function displayUserInfo() {
+    let username = localStorage.getItem("username");
+
+    const avatarEl = document.getElementById("userAvatar");
+    const nameEl = document.getElementById("userName");
+    const container = document.getElementById("userInfoDisplay");
+
+    if (username) {
+        nameEl.innerText = username;
+        avatarEl.innerText = username.charAt(0);
+        container.classList.remove("d-none");
     }
 }

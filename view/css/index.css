@@ -131,3 +131,202 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     color: #6c757d !important;
     opacity: 1;
 }
+
+.kanban-col {
+    min-height: 200px;
+    padding-bottom: 20px;
+}
+
+.task-card {
+    background-color: #121e1f;
+
+    border: 1px solid #2c3e50;
+    border-radius: 20px;
+    padding: 20px 20px 0 20px;
+    margin-bottom: 20px;
+    position: relative;
+    color: #20cd8d;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.task-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+}
+
+.task-card::before {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: 20px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #2c3e50;
+}
+
+.task-card.prio-4 {
+    border-color: rgba(220, 53, 69, 0.5);
+}
+.task-card.prio-4::before {
+    background-color: #dc3545;
+    box-shadow: 0 0 5px rgba(220, 53, 69, 0.4);
+}
+
+.task-card.prio-3 {
+    border-color: rgba(255, 193, 7, 0.5);
+}
+.task-card.prio-3::before {
+    background-color: #ffc107;
+    box-shadow: 0 0 5px rgba(255, 193, 7, 0.4);
+}
+
+.task-card.prio-2 {
+    border-color: rgba(13, 110, 253, 0.5);
+}
+.task-card.prio-2::before {
+    background-color: #0d6efd;
+    box-shadow: 0 0 5px rgba(13, 110, 253, 0.4);
+}
+
+.task-card.prio-1 {
+    border-color: rgba(32, 201, 151, 0.5);
+}
+.task-card.prio-1::before {
+    background-color: #20C997;
+    box-shadow: 0 0 5px rgba(32, 201, 151, 0.4);
+}
+
+
+
+.task-card.prio-4::before { background-color: #dc3545; }
+.task-card.prio-3::before { background-color: #ffc107; }
+.task-card.prio-2::before { background-color: #0d6efd; }
+.task-card.prio-1::before { background-color: #20C997; }
+
+.card-actions {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+.card-btn {
+    background: rgba(0,0,0,0.2);
+    border: none;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-left: 5px;
+}
+
+.card-btn:hover {
+    background: rgba(0,0,0,0.5);
+}
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+    line-height: 1.2;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+    width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.card-dates {
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    opacity: 0.9;
+    margin-bottom: 10px;
+}
+
+.card-status-bar {
+    background-color: #fff;
+    text-align: center;
+    padding: 8px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    margin-left: -20px;
+    margin-right: -20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Cores da Barra de Status */
+.status-bar-1 { background-color: #575761; }
+.status-bar-2 { background-color: #FFBF46; }
+.status-bar-3 { background-color: #20CD8D; }
+
+.status-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.status-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.2s;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+}
+
+.status-btn:hover {
+    color: #fff;
+    transform: scale(1.2);
+}
+
+.desc-cell {
+    max-width: 350px;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+
+@media (max-width: 768px) {
+    .desc-cell {
+        max-width: 150px;
+        font-size: 0.9rem;
+    }
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: #20C997;
+    color: #121e1f;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    box-shadow: 0 0 5px rgba(32, 201, 151, 0.5);
+}
