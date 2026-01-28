@@ -1,7 +1,11 @@
 package com.lfc.todosimple.model.projection;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.lfc.todosimple.model.Project;
 import com.lfc.todosimple.model.enums.TaskPriorityEnum;
 import com.lfc.todosimple.model.enums.TaskStatusEnum;
+import org.springframework.beans.factory.annotation.Value;
+
 
 import java.time.LocalDate;
 
@@ -15,7 +19,13 @@ public interface TaskProjection {
 
     public TaskStatusEnum getStatus();
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     public LocalDate getCreatedDate();
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     public LocalDate getDeadline();
+
+    @Value("#{target.project?.id}")
+    Long getProjectId();
+
 }

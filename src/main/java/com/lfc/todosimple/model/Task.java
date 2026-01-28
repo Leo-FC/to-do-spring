@@ -1,5 +1,6 @@
 package com.lfc.todosimple.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.lfc.todosimple.model.enums.TaskPriorityEnum;
 import com.lfc.todosimple.model.enums.TaskStatusEnum;
 import lombok.AllArgsConstructor;
@@ -41,21 +42,22 @@ public class Task {
     @Size(min = 1, max = 255)
     private String description;
 
-    @Column
-    (name = "priority", nullable = false)
+    @Column(name = "priority", nullable = false)
     private TaskPriorityEnum priority;
 
-    @Column
-    (name = "status", nullable = false)
+    @Column(name = "status", nullable = false)
     private TaskStatusEnum status = TaskStatusEnum.NAO_COMECOU;
 
 
-    @Column
-    (name = "created_date", nullable = false)
+    @Column(name = "created_date", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate createdDate;
 
-    @Column
-    (name = "deadline")
+    @Column(name = "deadline")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate deadline;
 
+    @ManyToOne
+    @JoinColumn(name = "project_id")
+    private Project project;
 }

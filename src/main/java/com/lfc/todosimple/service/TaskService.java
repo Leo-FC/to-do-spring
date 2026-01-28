@@ -1,9 +1,11 @@
 package com.lfc.todosimple.service;
 
+import com.lfc.todosimple.model.Project;
 import com.lfc.todosimple.model.Task;
 import com.lfc.todosimple.model.User;
 import com.lfc.todosimple.model.enums.ProfileEnum;
 import com.lfc.todosimple.model.projection.TaskProjection;
+import com.lfc.todosimple.repository.ProjectRepository;
 import com.lfc.todosimple.repository.TaskRepository;
 import com.lfc.todosimple.security.UserSpringSecurity;
 import com.lfc.todosimple.service.exceptions.AuthorizationException;
@@ -25,6 +27,10 @@ public class TaskService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private ProjectRepository projectRepository;
+
 
     public Task findById(Long id){
         Task task = this.taskRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException("Tarefa nao encontrada"));
@@ -83,6 +89,17 @@ public class TaskService {
         User user = this.userService.findById(userSpringSecurity.getId());
         obj.setId(null);
         obj.setUser(user);
+
+        if(obj.getProject() != null && obj.getProject().getId() != null){
+            Project project = projectRepository.findById(obj.getProject().getId())
+                    .orElseThrow(() -> new ObjectNotFoundException("Projeto nao encontrado"));
+
+            if(!project.getUser().getId().equals(user.getId())){
+                throw new AuthorizationException("Acesso negado");
+            }
+
+            obj.setProject(project);
+        }
         obj = this.taskRepository.save(obj);
         return obj;
     }
@@ -94,6 +111,19 @@ public class TaskService {
         newObj.setDescription(obj.getDescription());
         newObj.setPriority(obj.getPriority());
         newObj.setStatus(obj.getStatus());
+
+        if(obj.getProject() != null && obj.getProject().getId() != null){
+            Project project = projectRepository.findById(obj.getProject().getId())
+                    .orElseThrow(() -> new ObjectNotFoundException("Projeto nao encontrado"));
+
+            if(!project.getUser().getId().equals(newObj.getUser().getId())){
+                throw new AuthorizationException("Acesso negado");
+            }
+
+            newObj.setProject(project);
+        } else{
+            newObj.setProject(null);
+        }
 
         if(obj.getCreatedDate() != null) {
             newObj.setCreatedDate(obj.getCreatedDate());
