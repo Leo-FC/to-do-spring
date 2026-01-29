@@ -68,6 +68,35 @@
         </div>
     </div>
 
+    <div class="row mb-4 align-items-start">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-secondary text-white">
+                    <i class="bi bi-folder2-open"></i>
+                </span>
+                <select id="projectSelect" class="form-select form-select-custom" onchange="handleProjectChange(this.value)">
+                    <option value="" selected>Todas as Tarefas</option>
+                    <option value="-1">Sem Projeto (Avulsas)</option>
+                </select>
+            </div>
+            <p id="projectDescriptionDisplay" class="text-secondary small mt-2 mb-0 ms-1 fst-italic d-none">
+            </p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <button id="editProjectBtn" class="btn btn-outline-warning me-2 d-none" onclick="openEditProjectModal()">
+                <i class="bi bi-pencil-square"></i>
+            </button>
+
+            <button id="deleteProjectBtn" class="btn btn-outline-danger me-2 d-none" onclick="openDeleteProjectModal()">
+                <i class="bi bi-trash"></i>
+            </button>
+
+            <button class="btn btn-outline-custom" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                <i class="bi bi-folder-plus me-2"></i>Novo Projeto
+            </button>
+        </div>
+    </div>
+
     <div class="card p-4 mb-5 shadow-lg" style="background-color: #121E1F; border: none; border-radius: 15px;">
         <div class="row g-3">
             <div class="col-md-5 col-sm-12">
@@ -121,33 +150,42 @@
         </table>
     </div>
 
-        <div id="kanbanViewContainer" class="d-none mt-4">
-            <div class="row g-4">
-                <div class="col-12 col-md-6 col-xl-3">
-                    <h5 class="text-white fw-bold mb-3 text-center"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Urgente</h5>
-                    <div id="col-priority-4" class="kanban-col" ondrop="drop(event, 4)" ondragover="allowDrop(event)"></div>
-                </div>
+    <div id="kanbanViewContainer" class="d-none mt-4">
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-xl-3">
+                <h5 class="text-white fw-bold mb-3 text-center"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Urgente</h5>
+                <div id="col-priority-4" class="kanban-col" ondrop="drop(event, 4)" ondragover="allowDrop(event)"></div>
+            </div>
 
-                <div class="col-12 col-md-6 col-xl-3">
-                    <h5 class="text-white fw-bold mb-3 text-center"><i class="bi bi-arrow-up-circle-fill text-warning me-2"></i>Alta</h5>
-                    <div id="col-priority-3" class="kanban-col" ondrop="drop(event, 3)" ondragover="allowDrop(event)"></div>
-                </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <h5 class="text-white fw-bold mb-3 text-center"><i class="bi bi-arrow-up-circle-fill text-warning me-2"></i>Alta</h5>
+                <div id="col-priority-3" class="kanban-col" ondrop="drop(event, 3)" ondragover="allowDrop(event)"></div>
+            </div>
 
-                <div class="col-12 col-md-6 col-xl-3">
-                    <h5 class="text-white fw-bold mb-3 text-center"><i class="bi bi-dash-circle-fill text-primary me-2"></i>Média</h5>
-                    <div id="col-priority-2" class="kanban-col" ondrop="drop(event, 2)" ondragover="allowDrop(event)"></div>
-                </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <h5 class="text-white fw-bold mb-3 text-center"><i class="bi bi-dash-circle-fill text-primary me-2"></i>Média</h5>
+                <div id="col-priority-2" class="kanban-col" ondrop="drop(event, 2)" ondragover="allowDrop(event)"></div>
+            </div>
 
-                <div class="col-12 col-md-6 col-xl-3">
-                    <h5 class="text-white fw-bold mb-3 text-center"><i class="bi bi-arrow-down-circle-fill text-success me-2"></i>Baixa</h5>
-                    <div id="col-priority-1" class="kanban-col" ondrop="drop(event, 1)" ondragover="allowDrop(event)"></div>
-                </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <h5 class="text-white fw-bold mb-3 text-center"><i class="bi bi-arrow-down-circle-fill text-success me-2"></i>Baixa</h5>
+                <div id="col-priority-1" class="kanban-col" ondrop="drop(event, 1)" ondragover="allowDrop(event)"></div>
             </div>
         </div>
     </div>
 
     <div id="noTasksMessage" class="alert alert-dark d-none text-center border-0" style="background-color: #121E1F; color: #aaa;">
         <i class="bi bi-emoji-smile me-2"></i> Nenhuma tarefa encontrada.
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="liveToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMessage">
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
     </div>
 </div>
 
@@ -162,6 +200,13 @@
                     <div class="mb-3">
                         <label for="editTaskDescription" class="form-label ms-2">Descrição</label>
                         <input type="text" class="form-control form-control-custom" id="editTaskDescription" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editTaskProject" class="form-label ms-2">Projeto</label>
+                        <select id="editTaskProject" class="form-select form-select-custom">
+                            <option value="-1">📂 Sem Projeto</option>
+                        </select>
                     </div>
 
                     <div class="row mb-3">
@@ -219,6 +264,85 @@
             <div class="modal-footer justify-content-center">
                 <button type="button" class="btn btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-danger rounded-pill px-4" onclick="confirmDeleteTask()">Sim, Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteProjectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-custom border-danger">
+            <div class="modal-header border-danger">
+                <h5 class="modal-title text-danger"><i class="bi bi-trash-fill me-2"></i>Excluir Projeto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3 text-danger">
+                    <i class="bi bi-exclamation-triangle-fill display-3"></i>
+                </div>
+                <h5 class="text-white mb-3">Você tem certeza?</h5>
+                <p class="text-secondary">
+                    Isso excluirá o projeto e <strong>todas as tarefas</strong> vinculadas a ele.<br>
+                    Esta ação é irreversível.
+                </p>
+            </div>
+            <div class="modal-footer justify-content-center border-0">
+                <button type="button" class="btn btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4" onclick="confirmDeleteProject()">Sim, Excluir Tudo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createProjectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-custom">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-folder-plus me-2"></i>Novo Projeto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createProjectForm">
+                    <div class="mb-3">
+                        <label for="projectName" class="form-label ms-2">Nome do Projeto</label>
+                        <input type="text" class="form-control form-control-custom" id="projectName" placeholder="Ex: App Mobile" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="projectDescription" class="form-label ms-2">Descrição</label>
+                        <textarea class="form-control form-control-custom" id="projectDescription" rows="3" placeholder="Detalhes do projeto..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-light rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-custom" onclick="createProject()">Criar Projeto</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editProjectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-custom">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Editar Projeto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editProjectForm">
+                    <div class="mb-3">
+                        <label for="editProjectName" class="form-label ms-2">Nome do Projeto</label>
+                        <input type="text" class="form-control form-control-custom" id="editProjectName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editProjectDescription" class="form-label ms-2">Descrição</label>
+                        <textarea class="form-control form-control-custom" id="editProjectDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-light rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-custom" onclick="updateProject()">Salvar Alterações</button>
             </div>
         </div>
     </div>
