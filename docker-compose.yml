@@ -18,8 +18,8 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    working_dir: /usr/src/todosimple
-    container_name: todosimple
+    working_dir: /usr/src/aligntodo
+    container_name: aligntodo
     restart: on-failure
     env_file: ./.env
     ports:

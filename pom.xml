@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.lfc</groupId>
-    <artifactId>todosimple</artifactId>
+    <artifactId>aligntodo</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>todosimple</name>
+    <name>aligntodo</name>
     <description>Spring Boot API for To Do App</description>
     <properties>
         <java.version>17</java.version>
@@ -113,7 +113,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
-        <finalName>todosimple</finalName>
+        <finalName>aligntodo</finalName>
     </build>
 
     <packaging>jar</packaging>
