@@ -288,26 +288,57 @@ function filterAndRender() {
 }
 
 function getPriorityBadge(code) {
+    const span = document.createElement("span");
+    span.className = "badge";
     switch(code) {
-        case 1: return '<span class="badge bg-success">Baixa</span>';
-        case 2: return '<span class="badge bg-primary">Média</span>';
-        case 3: return '<span class="badge bg-warning text-dark">Alta</span>';
-        case 4: return '<span class="badge bg-danger">Urgente</span>';
-        default: return '<span class="badge bg-secondary">Indefinido</span>';
+        case 1:
+            span.classList.add("bg-success");
+            span.textContent = "Baixa";
+            break;
+        case 2:
+            span.classList.add("bg-primary");
+            span.textContent = "Média";
+            break;
+        case 3:
+            span.classList.add("bg-warning", "text-dark");
+            span.textContent = "Alta";
+            break;
+        case 4:
+            span.classList.add("bg-danger");
+            span.textContent = "Urgente";
+            break;
+        default:
+            span.classList.add("bg-secondary");
+            span.textContent = "Indefinido";
     }
+    return span;
 }
 
 function getStatusBadge(code) {
+    const span = document.createElement("span");
+    span.className = "badge";
     switch(code) {
-        case 1: return '<span class="badge border border-secondary text-secondary bg-transparent">Não Começou</span>';
-        case 2: return '<span class="badge bg-info text-dark">Em Andamento</span>';
-        case 3: return '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Concluído</span>';
-        default: return '<span class="badge bg-secondary">?</span>';
+        case 1:
+            span.classList.add("border", "border-secondary", "text-secondary", "bg-transparent");
+            span.textContent = "Não Começou";
+            break;
+        case 2:
+            span.classList.add("bg-info", "text-dark");
+            span.textContent = "Em Andamento";
+            break;
+        case 3:
+            span.classList.add("bg-success");
+            span.innerHTML = '<i class="bi bi-check-circle"></i> Concluído';
+            break;
+        default:
+            span.classList.add("bg-secondary");
+            span.textContent = "?";
     }
+    return span;
 }
 
 function formatDate(dateInput) {
-    if (!dateInput) return '<span class="text-muted small">-</span>';
+    if (!dateInput) return '-';
     if (Array.isArray(dateInput)) {
         const year = dateInput[0];
         const month = String(dateInput[1]).padStart(2, '0');
@@ -463,33 +494,64 @@ function renderTasks(tasks) {
     table.classList.remove("d-none");
 
     tasks.forEach((task, index) => {
-        const createdDate = task.createdDate;
-        const deadline = task.deadline;
+        const tr = document.createElement("tr");
+        tr.className = "align-middle";
 
-        const userColumnHtml = isAdmin()
-            ? `<td><span class="badge bg-info text-dark">${task.user ? task.user.username : 'N/A'}</span></td>`
-            : '';
+        const tdId = document.createElement("td");
+        tdId.textContent = index + 1;
+        tr.appendChild(tdId);
 
-        const row = `
-            <tr class="align-middle">
-                <td>${index + 1}</td>
-                <td class="fw-bold desc-cell">${task.description}</td>
-                ${userColumnHtml}
-                <td class="text-center">${formatDate(createdDate)}</td>
-                <td class="text-center">${formatDate(deadline)}</td>
-                <td class="text-center">${getPriorityBadge(task.priority)}</td>
-                <td class="text-center">${getStatusBadge(task.status)}</td>
-                <td class="text-end">
-                    <button class="btn btn-outline-warning btn-sm me-1" onclick="openEditModal(${task.id})">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-outline-danger btn-sm" onclick="openDeleteModal(${task.id})">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-        tbody.innerHTML += row;
+        const tdDesc = document.createElement("td");
+        tdDesc.className = "fw-bold desc-cell";
+        tdDesc.textContent = task.description;
+        tr.appendChild(tdDesc);
+
+        if (isAdmin()) {
+            const tdUser = document.createElement("td");
+            const spanUser = document.createElement("span");
+            spanUser.className = "badge bg-info text-dark";
+            spanUser.textContent = task.user ? task.user.username : 'N/A';
+            tdUser.appendChild(spanUser);
+            tr.appendChild(tdUser);
+        }
+
+        const tdCreated = document.createElement("td");
+        tdCreated.className = "text-center";
+        tdCreated.textContent = formatDate(task.createdDate);
+        tr.appendChild(tdCreated);
+
+        const tdDeadline = document.createElement("td");
+        tdDeadline.className = "text-center";
+        tdDeadline.textContent = formatDate(task.deadline);
+        tr.appendChild(tdDeadline);
+
+        const tdPrio = document.createElement("td");
+        tdPrio.className = "text-center";
+        tdPrio.appendChild(getPriorityBadge(task.priority));
+        tr.appendChild(tdPrio);
+
+        const tdStatus = document.createElement("td");
+        tdStatus.className = "text-center";
+        tdStatus.appendChild(getStatusBadge(task.status));
+        tr.appendChild(tdStatus);
+
+        const tdActions = document.createElement("td");
+        tdActions.className = "text-end";
+
+        const btnEdit = document.createElement("button");
+        btnEdit.className = "btn btn-outline-warning btn-sm me-1";
+        btnEdit.innerHTML = '<i class="bi bi-pencil"></i>';
+        btnEdit.onclick = function() { openEditModal(task.id); };
+        tdActions.appendChild(btnEdit);
+
+        const btnDelete = document.createElement("button");
+        btnDelete.className = "btn btn-outline-danger btn-sm";
+        btnDelete.innerHTML = '<i class="bi bi-trash"></i>';
+        btnDelete.onclick = function() { openDeleteModal(task.id); };
+        tdActions.appendChild(btnDelete);
+
+        tr.appendChild(tdActions);
+        tbody.appendChild(tr);
     });
 }
 
@@ -512,81 +574,117 @@ function renderKanban(tasks) {
     tasks.forEach(task => {
         let statusText = "Indefinido";
         let statusClass = "status-bar-1";
-        let arrowsHtml = "";
+        const controlContainer = document.createElement("div");
+        controlContainer.className = "status-controls";
 
         if (task.status === 1) {
             statusText = "Não começou";
             statusClass = "status-bar-1";
-            arrowsHtml = `
-                <button type="button" class="status-btn" onclick="changeStatus(event, ${task.id}, 2)" title="Iniciar">
-                    <i class="bi bi-caret-up-fill"></i>
-                </button>
-            `;
+
+            const txt = document.createElement("span");
+            txt.textContent = statusText;
+            controlContainer.appendChild(txt);
+
+            const btnNext = document.createElement("button");
+            btnNext.type = "button";
+            btnNext.className = "status-btn";
+            btnNext.title = "Iniciar";
+            btnNext.innerHTML = '<i class="bi bi-caret-up-fill"></i>';
+            btnNext.onclick = function(e) { changeStatus(e, task.id, 2); };
+            controlContainer.appendChild(btnNext);
         }
         else if (task.status === 2) {
             statusText = "Em andamento";
             statusClass = "status-bar-2";
-            arrowsHtml = `
-                <button type="button" class="status-btn" onclick="changeStatus(event, ${task.id}, 1)" title="Voltar">
-                    <i class="bi bi-caret-down-fill"></i>
-                </button>
-                <span class="mx-2">${statusText}</span>
-                <button type="button" class="status-btn" onclick="changeStatus(event, ${task.id}, 3)" title="Concluir">
-                    <i class="bi bi-caret-up-fill"></i>
-                </button>
-            `;
+
+            const btnPrev = document.createElement("button");
+            btnPrev.type = "button";
+            btnPrev.className = "status-btn";
+            btnPrev.title = "Voltar";
+            btnPrev.innerHTML = '<i class="bi bi-caret-down-fill"></i>';
+            btnPrev.onclick = function(e) { changeStatus(e, task.id, 1); };
+            controlContainer.appendChild(btnPrev);
+
+            const txt = document.createElement("span");
+            txt.className = "mx-2";
+            txt.textContent = statusText;
+            controlContainer.appendChild(txt);
+
+            const btnNext = document.createElement("button");
+            btnNext.type = "button";
+            btnNext.className = "status-btn";
+            btnNext.title = "Concluir";
+            btnNext.innerHTML = '<i class="bi bi-caret-up-fill"></i>';
+            btnNext.onclick = function(e) { changeStatus(e, task.id, 3); };
+            controlContainer.appendChild(btnNext);
         }
         else if (task.status === 3) {
             statusText = "Concluído";
             statusClass = "status-bar-3";
-            arrowsHtml = `
-                <button type="button" class="status-btn" onclick="changeStatus(event, ${task.id}, 2)" title="Retomar">
-                    <i class="bi bi-caret-down-fill"></i>
-                </button>
-            `;
+
+            const btnPrev = document.createElement("button");
+            btnPrev.type = "button";
+            btnPrev.className = "status-btn";
+            btnPrev.title = "Retomar";
+            btnPrev.innerHTML = '<i class="bi bi-caret-down-fill"></i>';
+            btnPrev.onclick = function(e) { changeStatus(e, task.id, 2); };
+            controlContainer.appendChild(btnPrev);
+
+            const txt = document.createElement("span");
+            txt.textContent = statusText;
+            controlContainer.appendChild(txt);
         }
 
-        if (task.status !== 2) {
-            if (task.status === 1) {
-                arrowsHtml = `<span>${statusText}</span> ${arrowsHtml}`;
-            } else {
-                arrowsHtml = `${arrowsHtml} <span>${statusText}</span>`;
-            }
+        const cardDiv = document.createElement("div");
+        cardDiv.className = `task-card prio-${task.priority}`;
+        cardDiv.draggable = true;
+        cardDiv.ondragstart = function(e) { drag(e, task.id); };
+
+        const cardActions = document.createElement("div");
+        cardActions.className = "card-actions";
+
+        const btnEdit = document.createElement("button");
+        btnEdit.className = "card-btn";
+        btnEdit.innerHTML = '<i class="bi bi-pencil"></i>';
+        btnEdit.onclick = function() { openEditModal(task.id); };
+
+        const btnDelete = document.createElement("button");
+        btnDelete.className = "card-btn";
+        btnDelete.innerHTML = '<i class="bi bi-trash"></i>';
+        btnDelete.onclick = function() { openDeleteModal(task.id); };
+
+        cardActions.appendChild(btnEdit);
+        cardActions.appendChild(btnDelete);
+        cardDiv.appendChild(cardActions);
+
+        const cardTitle = document.createElement("div");
+        cardTitle.className = "card-title";
+        cardTitle.style.marginTop = "35px";
+        cardTitle.textContent = task.description;
+        cardDiv.appendChild(cardTitle);
+
+        if (isAdmin() && task.user) {
+            const userDiv = document.createElement("div");
+            userDiv.className = "small text-center mb-2";
+            userDiv.style.opacity = "0.8";
+            userDiv.textContent = task.user.username;
+            cardDiv.appendChild(userDiv);
         }
 
-        const deadline = formatDate(task.deadline);
-        const userName = (isAdmin() && task.user) ? `<div class="small text-center mb-2" style="opacity: 0.8">${task.user.username}</div>` : '';
-        const priorityClass = `prio-${task.priority}`;
+        const cardDates = document.createElement("div");
+        cardDates.className = "card-dates";
+        cardDates.innerHTML = `<i class="bi bi-calendar3 me-1"></i> ${formatDate(task.deadline)}`;
+        cardDiv.appendChild(cardDates);
 
-        const cardHtml = `
-            <div class="task-card ${priorityClass}" draggable="true" ondragstart="drag(event, ${task.id})">
-                <div class="card-actions">
-                    <button class="card-btn" onclick="openEditModal(${task.id})">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="card-btn" onclick="openDeleteModal(${task.id})">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-                <div class="card-title" style="margin-top: 35px;">
-                    ${task.description}
-                </div>
-                ${userName}
-                <div class="card-dates">
-                    <i class="bi bi-calendar3 me-1"></i> ${deadline}
-                </div>
-                <div class="card-status-bar ${statusClass}">
-                    <div class="status-controls">
-                        ${arrowsHtml}
-                    </div>
-                </div>
-            </div>
-        `;
+        const statusBar = document.createElement("div");
+        statusBar.className = `card-status-bar ${statusClass}`;
+        statusBar.appendChild(controlContainer);
+        cardDiv.appendChild(statusBar);
 
         const colId = `col-priority-${task.priority}`;
         const colElement = document.getElementById(colId);
         if (colElement) {
-            colElement.innerHTML += cardHtml;
+            colElement.appendChild(cardDiv);
         }
     });
 }
