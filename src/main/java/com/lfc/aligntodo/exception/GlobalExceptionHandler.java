@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -34,11 +35,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
     @Value("${server.error.include-exception}")
     private boolean printStackTrace;
 
+    @Override
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException methodArgumentNotValidException,
             HttpHeaders headers,
-            HttpStatus status,
+            HttpStatusCode status, // Spring Boot 3 mudou de HttpStatus para HttpStatusCode
             WebRequest request
     ){
         ErrorResponse errorResponse = new ErrorResponse(
@@ -58,9 +60,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
             Exception exception,
             WebRequest request){
 
-        final String errorMessage = "Unknown error ocurred";
-
-        log.error(errorMessage, exception);
+        final String errorMessage = "Unknown error occurred";
+        // CORREÇÃO: Log apenas da mensagem, sem stack trace completo
+        log.error(errorMessage + ": {}", exception.getMessage());
 
         return buildErrorResponse(
                 exception,
@@ -75,11 +77,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
             DataIntegrityViolationException dataIntegrityViolationException,
             WebRequest request){
         String errorMessage = dataIntegrityViolationException.getMostSpecificCause().getMessage();
-
         if(errorMessage != null && errorMessage.contains("Duplicate entry")){
             errorMessage = "Este nome de usuário já está em uso.";
         }
-        log.error("Failed to save entity with integrity problems: " + errorMessage, dataIntegrityViolationException);
+
+        // CORREÇÃO: Log limpo
+        log.warn("Integrity violation: {}", errorMessage);
+
         return buildErrorResponse(
                 dataIntegrityViolationException,
                 errorMessage,
@@ -93,12 +97,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
             ConstraintViolationException constraintViolationException,
             WebRequest request){
 
-        StringBuilder errorMessage = new StringBuilder("Nome de usuário deve ter no mínimo 3 caracteres.");
+        String errorMessage = "Nome de usuário deve ter no mínimo 3 caracteres.";
 
-        log.error("Failed to validate element", constraintViolationException);
+        // CORREÇÃO: Log limpo
+        log.warn("Constraint violation: {}", constraintViolationException.getMessage());
+
         return buildErrorResponse(
                 constraintViolationException,
-                errorMessage.toString(),
+                errorMessage,
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 request);
     }
@@ -109,7 +115,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
             ObjectNotFoundException objectNotFoundException,
             WebRequest request){
 
-        log.error("Failed to find the requested element", objectNotFoundException);
+        log.warn("Object not found: {}", objectNotFoundException.getMessage());
         return buildErrorResponse(objectNotFoundException, HttpStatus.NOT_FOUND, request);
     }
 
@@ -119,28 +125,28 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
             DataBindingViolationException dataBindingViolationException,
             WebRequest request){
 
-        log.error("Failed to delete the requested element", dataBindingViolationException);
+        log.warn("Data binding violation: {}", dataBindingViolationException.getMessage());
         return buildErrorResponse(dataBindingViolationException, HttpStatus.CONFLICT, request);
     }
 
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseEntity<Object> handleAuthenticationException(AuthenticationException authenticationException, WebRequest request){
-        log.error("Authentication error: ", authenticationException);
+        log.warn("Authentication error: {}", authenticationException.getMessage());
         return buildErrorResponse(authenticationException, HttpStatus.UNAUTHORIZED, request);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException accessDeniedException, WebRequest request){
-        log.error("Access Denied error: ", accessDeniedException);
+        log.warn("Access Denied: {}", accessDeniedException.getMessage());
         return buildErrorResponse(accessDeniedException, HttpStatus.FORBIDDEN, request);
     }
 
     @ExceptionHandler(AuthorizationException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ResponseEntity<Object> handleAuthorizationException(AuthorizationException authorizationException, WebRequest request){
-        log.error("Authorization error: ", authorizationException);
+        log.warn("Authorization error: {}", authorizationException.getMessage());
         return buildErrorResponse(authorizationException, HttpStatus.FORBIDDEN, request);
     }
 
@@ -150,6 +156,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler imple
             WebRequest request){
         return buildErrorResponse(exception, exception.getMessage(), httpStatus, request);
     }
+
     private ResponseEntity<Object> buildErrorResponse(
             Exception exception,
             String message,
